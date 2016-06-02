@@ -1,4 +1,5 @@
 using DataFrames
+using DecisionTree
 
 #Read the data
 train = readtable("../data/train.csv")
@@ -88,3 +89,41 @@ full[:SimpleColor] = map(c -> split(c, " ")[1], full[:SimpleColor])
 
 
 # In the sex we have both sex and intactness, which are two different things
+full[:Intact] = 0
+full[Bool[ismatch(r"Intact", x) for x in full[:SexuponOutcome]], :Intact] = 1
+full[Bool[ismatch(r"Unknown", x) for x in full[:SexuponOutcome]], :Intact] = 3 #on the forum they use "Unknown"
+
+full[:Sex] = "Male"
+full[Bool[ismatch(r"Female", x) for x in full[:SexuponOutcome]], :Sex] = "Female"
+full[Bool[ismatch(r"Unknown", x) for x in full[:SexuponOutcome]], :Sex] = "Unknown"
+
+
+# Now in AgeinDays we have some missing values, they impute them by using a decision tree, we just use the average
+mean_age = mean(full[!isna(full[:AgeinDays]),:AgeinDays])
+full[isna(full[:AgeinDays]),:AgeinDays] = mean_age
+
+
+# Separate baby animals from grown up
+full[:LifeStage] = "adult"
+full[full[:AgeinDays] .<= 365, :LifeStage] = "baby"
+
+
+#OK, now save train and test
+training = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Weekday, :Month, :Year, :TimeofDay, :IsMix, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
+Xs_train = convert(Array, full[1:26729, training])
+ys_train = convert(Array, full[1:26729, :OutcomeType])
+Xs_test = convert(Array, full[26730:end, training])
+
+
+#And start the actual learning
+#acdc
+model = build_forest(ys_train, Xs_train, 2, 10, 0.5)
+
+
+#Predict everything
+probas = apply_forest_proba(model, Xs_test, ["Adoption", "Died", "Euthanasia", "Return_to_owner", "Transfer"])
+
+
+#And format to submit
+submission = DataFrame(ID = 1:11456, Adoption = probas[:,1],Died = probas[:,2],Euthanasia = probas[:,3],Return_to_owner = probas[:,4],Transfer = probas[:,5])
+writetable("./to_submit.csv", submission)
