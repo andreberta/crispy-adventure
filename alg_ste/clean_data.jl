@@ -1,5 +1,4 @@
 using DataFrames
-using JLD
 
 #Read the data
 train = readtable("../data/train.csv")
@@ -134,9 +133,12 @@ full[full[:AgeinDays] .<= 365, :LifeStage] = "baby"
 #Intact -> keep
 #Sex -> keep
 #Lifestage -> keep, but it is similar to AgeinDays
-training = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Weekday, :Month, :Year, :TimeofDay, :IsMix, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
-Xs_train = convert(Array, full[1:26729, training])
-ys_train = convert(Array, full[1:26729, :OutcomeType])
-Xs_test = convert(Array, full[26730:end, training])
+attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Weekday, :Month, :Year, :TimeofDay, :IsMix, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
+Xs_train = full[1:26729, attributes]
+ys_train = full[1:26729, :OutcomeType]
+Xs_test = full[26730:end, attributes]
 
-save("./clean_data.jld", "Xs_train", Xs_train, "ys_train", ys_train, "Xs_test", Xs_test)
+
+writetable("./clean_data/Xs_train.csv", Xs_train)
+writecsv("./clean_data/ys_train.csv", ys_train)
+writetable("./clean_data/Xs_test.csv", Xs_test)
