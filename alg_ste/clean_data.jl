@@ -55,7 +55,9 @@ full[isna(full[:SexuponOutcome]), :SexuponOutcome] = "Unknown"
 full[:DateTime] = DateTime(full[:DateTime], "yyyy-mm-dd HH:MM:SS")
 
 full[:Hour] = Dates.hour(full[:DateTime])
+full[:Minute] = Dates.minute(full[:DateTime])
 full[:Weekday] = Dates.dayofweek(full[:DateTime])
+full[:Day] = Dates.dayofmonth(full[:DateTime])
 full[:Month] = Dates.month(full[:DateTime])
 full[:Year] = Dates.year(full[:DateTime])
 
@@ -63,7 +65,7 @@ full[:Year] = Dates.year(full[:DateTime])
 # Time of day may also be useful
 function time_of_day(hour::Int64)
     if hour > 5 && hour < 11 return "morning"
-    elseif hour > 10 && hour < 16 return "midday"
+    elseif hour > 11 && hour < 16 return "midday"
     elseif hour > 15 && hour < 20 return "lateday"
     end
     return "night"
@@ -72,10 +74,15 @@ end
 full[:TimeofDay] = map(time_of_day, full[:Hour])
 
 
+# An animal with an accurate description of breed/color could be a better looking one?
+full[:ColorComplexity] = map(length, full[:Color])
+full[:BreedComplexity] = map(length, full[:Breed])
+
 # Now we take care of the breeds
 # Find mixes
 full[:IsMix] = 0
 full[Bool[ismatch(r"Mix", x) for x in full[:Breed]], :IsMix] = 1
+full[Bool[ismatch(r"/", x) for x in full[:Breed]], :IsMix] = 1
 
 #Remove the word mix and split on / keeping only the first one (why?)
 full[:SimpleBreed] = map(b -> replace(b, " Mix", ""), full[:Breed])
@@ -111,29 +118,34 @@ full[full[:AgeinDays] .<= 365, :LifeStage] = "baby"
 #up to now we have:
 #AnimalID -> remove
 #Name -> keep, I don't think anybody would like to have a dog named "Scooter", is it farting too much?
-#Datetime -> remove, we have split it
+#Datetime -> remove, we have split it                               KEEP IN MIND THAT THIS (AND DERIVED) IS LIKE CHEATING
 #OutcomeType -> this is the label to predict
 #OutcomeSubtype -> DO NOT KEEP! Useless as y, dangerous as x
 #AnimalType -> keep
 #SexuponOutcome -> remove, we have sex+intact
-#AgeuponOutcome -> remove, we have AgeinDays
+#AgeuponOutcome -> remove, we have AgeinDays                        KEEP IN MIND THAT THIS (AND DERIVED) IS LIKE CHEATING
 #Breed -> remove, we have simple breed
 #Color -> remove, we have simple color
 #ID -> remove
 #AgeinDays -> keep
 #HasName -> keep
 #Hour -> keep, but I am in doubt
+#Minute -> keep, but I am in doubt
 #Weekday -> keep, but I am in doubt
+#Day -> keep, but I am in doubt
 #Month -> keep
 #Year -> keep
 #TimeofDay -> keep, but it is similar to Hour
+#ColorComplexity -> keep
+#BreedComplexity -> keep
 #IsMix -> keep
 #SimpleBreed -> keep
 #SimpleColor -> keep
 #Intact -> keep
 #Sex -> keep
 #Lifestage -> keep, but it is similar to AgeinDays
-attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Weekday, :Month, :Year, :TimeofDay, :IsMix, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
+attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Minute, :Weekday, :Day, :Month, :Year, :TimeofDay, :ColorComplexity, :BreedComplexity, :IsMix, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
+#attributes2 = [:HasName, :TimeofDay, :Weekday, :Year, :Month, :Day, :Sex, :Intact, :IsMix, :ColorComplexity, :BreedComplexity, :AnimalType, :AgeinDays]
 Xs_train = full[1:26729, attributes]
 ys_train = full[1:26729, :OutcomeType]
 Xs_test = full[26730:end, attributes]
