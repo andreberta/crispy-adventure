@@ -1,10 +1,9 @@
 numProcs = 4
-addProcs(numProcs)
+addprocs(numProcs)
 
 using DataFrames
 using DecisionTree
 
-convert(Array)
 #Load the data
 Xs_train = convert(Array, readtable("./clean_data/Xs_train.csv"))
 ys_train = convert(Array, readtable("./clean_data/ys_train.csv"))[:]
@@ -13,11 +12,11 @@ Xs_test = convert(Array, readtable("./clean_data/Xs_test.csv"))
 
 #And start the actual learning
 #acdc
-model = build_forest(ys_train, Xs_train, 10, 100)
-model_2 = nfoldCV_forest(ys_train, Xs_train, 2, 10, 5) #OOB come cazzo si fa?
+model = RandomForestClassifier(nsubfeatures=0, ntrees=300, partialsampling=0.7)
+DecisionTree.fit!(model, Xs_train, ys_train)
 
 #Predict everything
-probas = apply_forest_proba(model, Xs_test, ["Adoption", "Died", "Euthanasia", "Return_to_owner", "Transfer"])
+probas = DecisionTree.predict_proba(model, Xs_test)
 
 
 #And format to submit
