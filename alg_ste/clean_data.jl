@@ -145,12 +145,9 @@ full[full[:AgeinDays] .<= 365, :LifeStage] = "baby"
 #Sex -> keep
 #Lifestage -> keep, but it is similar to AgeinDays
 attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Minute, :Weekday, :Day, :Month, :Year, :TimeofDay, :ColorComplexity, :BreedComplexity, :IsMix, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
-#attributes2 = [:HasName, :TimeofDay, :Weekday, :Year, :Month, :Day, :Sex, :Intact, :IsMix, :ColorComplexity, :BreedComplexity, :AnimalType, :AgeinDays]
-Xs_train = full[1:26729, attributes]
-ys_train = full[1:26729, :OutcomeType]
+Train = full[1:26729, attributes]
+Train[:OutcomeType] = full[1:26729, :OutcomeType]
 Xs_test = full[26730:end, attributes]
 
-
-writetable("./clean_data/Xs_train.csv", Xs_train)
-writecsv("./clean_data/ys_train.csv", ys_train)
+writetable("./clean_data/train.csv", Train)
 writetable("./clean_data/Xs_test.csv", Xs_test)
