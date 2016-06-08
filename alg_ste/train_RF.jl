@@ -4,9 +4,12 @@ addprocs(numProcs)
 using DataFrames
 using DecisionTree
 
+#TODO: STA ROBA FA CAGARE
+
 #Load the data
-train = convert(Array, readtable("./clean_data/train.csv"))
-Xs_test = convert(Array, readtable("./clean_data/Xs_test.csv"))
+train = convert(Array, readtable("./clean_data/cat_train.csv"))
+Xs_test = convert(Array, readtable("./clean_data/cat_test.csv"))
+out_file = "./predictions/RF_cat.csv"
 
 ys_train = train[:OutcomeType]
 Xs_train = train[:,1:end-1]

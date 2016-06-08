@@ -1,11 +1,26 @@
 library(xgboost)
 
-train <- read.csv("./clean_data/train.csv")
-Xs_test <- read.csv("./clean_data/Xs_test.csv")
+doing <- "dog"
 
-factorVars <- c('AnimalType','SimpleBreed','SimpleColor', 'HasName','IsMix','Intact','Sex','TimeofDay','LifeStage', 'OutcomeType')
+if (doing == "cat") {
+    train <- read.csv("./clean_data/cat_train.csv")
+    Xs_test <- read.csv("./clean_data/cat_test.csv")
+    out_file <- "./predictions/XGB_cat.csv"
+    n_rounds <- 20
+} else {
+    train <- read.csv("./clean_data/dog_train.csv")
+    Xs_test <- read.csv("./clean_data/dog_test.csv")
+    out_file <- "./predictions/XGB_dog.csv"
+    n_rounds <- 30
+}
+
+#as attributes we have
+#attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Minute, :Weekday, :Day, :Month, :Year, :TimeofDay, :ColorComplexity, :BreedComplexity, :IsMix, :IsSlash :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
+
+
+factorVars <- c('HasName', 'TimeofDay', 'IsMix', 'IsSlash', 'SimpleBreed','SimpleColor','Intact','Sex','LifeStage', 'OutcomeType')
 train[factorVars] <- lapply(train[factorVars], function(x) as.factor(x))
-factorVars <- c('AnimalType','SimpleBreed','SimpleColor', 'HasName','IsMix','Intact','Sex','TimeofDay','LifeStage')
+factorVars <- c('HasName', 'TimeofDay', 'IsMix', 'IsSlash', 'SimpleBreed','SimpleColor','Intact','Sex','LifeStage')
 Xs_test[factorVars] <- lapply(Xs_test[factorVars], function(x) as.factor(x))
 
 # Need to change to numeric
@@ -15,19 +30,19 @@ y_train <- as.numeric(as.factor(train$OutcomeType)) - 1
 labels_train <- data.frame(train$OutcomeType, y_train)
 
 # xgboost-specific design matrices
-xgb_train <- xgb.DMatrix(model.matrix(~AnimalType+AgeinDays+HasName+Hour+Weekday+Day+Month+Year+TimeofDay+ColorComplexity+BreedComplexity+IsMix+SimpleBreed+SimpleColor+Intact+Sex+LifeStage, data=train), label=y_train, missing=NA)
+xgb_train <- xgb.DMatrix(model.matrix(~AgeinDays+HasName+Hour+Minute+Weekday+Day+Month+Year+TimeofDay+ColorComplexity+BreedComplexity+IsMix+IsSlash+SimpleBreed+SimpleColor+Intact+Sex+LifeStage, data=train), label=y_train, missing=NA)
 
-xgb_test <- xgb.DMatrix(model.matrix(~AnimalType+AgeinDays+HasName+Hour+Weekday+Day+Month+Year+TimeofDay+ColorComplexity+BreedComplexity+IsMix+SimpleBreed+SimpleColor+Intact+Sex+LifeStage, data=Xs_test), missing=NA)
+xgb_test  <- xgb.DMatrix(model.matrix(~AgeinDays+HasName+Hour+Minute+Weekday+Day+Month+Year+TimeofDay+ColorComplexity+BreedComplexity+IsMix+IsSlash+SimpleBreed+SimpleColor+Intact+Sex+LifeStage, data=Xs_test), missing=NA)
 
 
 # tune nrounds - uncomment first
 #xgb.cv(data=xgb_train, label=y_train, nfold=5, nround=200, objective='multi:softprob', num_class=5, eval_metric='mlogloss')
 
-# looks like nrounds should be around 45 (mah, per me gia a 20 è ok...)
+# looks like nrounds should be around 45 (40 gatti, 30 cani per me)
 
 
 # build model
-xgb_model <- xgboost(xgb_train, y_train, nrounds=40, objective='multi:softprob', num_class=5, eval_metric='mlogloss', early.stop.round=TRUE)
+xgb_model <- xgboost(xgb_train, y_train, nrounds=n_rounds, objective='multi:softprob', num_class=5, eval_metric='mlogloss', early.stop.round=TRUE)
 
 # make predictions
 predictions <- predict(xgb_model, xgb_test)
@@ -41,9 +56,9 @@ colnames(xgb_preds) <- c('Adoption', 'Died', 'Euthanasia', 'Return_to_owner', 'T
 # attach ID column
 xgb_preds['ID'] <- Xs_test['ID']
 
-write.csv(xgb_preds, './predictions/XGB.csv', row.names=FALSE)
+write.csv(xgb_preds, out_file, row.names=FALSE)
 
 
 #visualize feature importance
-importance_matrix <- xgb.importance(factorVars, model = xgb_model)
+importance_matrix <- xgb.importance(c('AgeinDays', 'HasName', 'Hour', 'Minute', 'Weekday', 'Day', 'Month', 'Year', 'TimeofDay', 'ColorComplexity', 'BreedComplexity', 'IsMix', 'IsSlash', 'SimpleBreed', 'SimpleColor', 'Intact', 'Sex', 'LifeStage'), model = xgb_model)
 xgb.plot.importance(importance_matrix)

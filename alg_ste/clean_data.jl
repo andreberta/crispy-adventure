@@ -78,16 +78,17 @@ full[:TimeofDay] = map(time_of_day, full[:Hour])
 full[:ColorComplexity] = map(length, full[:Color])
 full[:BreedComplexity] = map(length, full[:Breed])
 
+
 # Now we take care of the breeds
 # Find mixes
-full[:IsMix] = 0
-full[Bool[ismatch(r"Mix", x) for x in full[:Breed]], :IsMix] = 1
-full[Bool[ismatch(r"/", x) for x in full[:Breed]], :IsMix] = 1
+full[:IsMix] = "no"
+full[Bool[ismatch(r"Mix", x) for x in full[:Breed]], :IsMix] = "yes"
+full[:IsSlash] = "no"
+full[Bool[ismatch(r"/", x) for x in full[:Breed]], :IsSlash] = "yes"
 
-#Remove the word mix and split on / keeping only the first one (why?)
+#Remove the word mix and split on / keeping only the first
 full[:SimpleBreed] = map(b -> replace(b, " Mix", ""), full[:Breed])
 full[:SimpleBreed] = map(b -> split(b, "/")[1], full[:SimpleBreed])
-
 
 # Now simplify the colors
 full[:SimpleColor] = map(c -> split(c, "/")[1], full[:Color])
@@ -95,9 +96,9 @@ full[:SimpleColor] = map(c -> split(c, " ")[1], full[:SimpleColor])
 
 
 # In the sex we have both sex and intactness, which are two different things
-full[:Intact] = 0
-full[Bool[ismatch(r"Intact", x) for x in full[:SexuponOutcome]], :Intact] = 1
-full[Bool[ismatch(r"Unknown", x) for x in full[:SexuponOutcome]], :Intact] = 3 #on the forum they use "Unknown"
+full[:Intact] = "no"
+full[Bool[ismatch(r"Intact", x) for x in full[:SexuponOutcome]], :Intact] = "yes"
+full[Bool[ismatch(r"Unknown", x) for x in full[:SexuponOutcome]], :Intact] = "Unknown"
 
 full[:Sex] = "Male"
 full[Bool[ismatch(r"Female", x) for x in full[:SexuponOutcome]], :Sex] = "Female"
@@ -111,16 +112,17 @@ full[isna(full[:AgeinDays]),:AgeinDays] = mean_age
 
 # Separate baby animals from grown up
 full[:LifeStage] = "adult"
+full[full[:AgeinDays] .<= 2*365, :LifeStage] = "nearly_baby"
 full[full[:AgeinDays] .<= 365, :LifeStage] = "baby"
 
 
 #OK, now keep the relevant attributes and split between train and test
 #up to now we have:
 #AnimalID -> remove
-#Name -> keep, I don't think anybody would like to have a dog named "Scooter", is it farting too much?
+#Name -> keep, but probably I will never use it
 #Datetime -> remove, we have split it                               KEEP IN MIND THAT THIS (AND DERIVED) IS LIKE CHEATING
 #OutcomeType -> this is the label to predict
-#OutcomeSubtype -> DO NOT KEEP! Useless as y, dangerous as x
+#OutcomeSubtype -> useless
 #AnimalType -> keep
 #SexuponOutcome -> remove, we have sex+intact
 #AgeuponOutcome -> remove, we have AgeinDays                        KEEP IN MIND THAT THIS (AND DERIVED) IS LIKE CHEATING
@@ -139,16 +141,27 @@ full[full[:AgeinDays] .<= 365, :LifeStage] = "baby"
 #ColorComplexity -> keep
 #BreedComplexity -> keep
 #IsMix -> keep
+#IsSlash -> keep
 #SimpleBreed -> keep
 #SimpleColor -> keep
 #Intact -> keep
 #Sex -> keep
 #Lifestage -> keep, but it is similar to AgeinDays
-attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Minute, :Weekday, :Day, :Month, :Year, :TimeofDay, :ColorComplexity, :BreedComplexity, :IsMix, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
+attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Minute, :Weekday, :Day, :Month, :Year, :TimeofDay, :ColorComplexity, :BreedComplexity, :IsMix, :IsSlash, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
 Train = full[1:26729, attributes]
 Train[:OutcomeType] = full[1:26729, :OutcomeType]
 Xs_test = full[26730:end, attributes]
 Xs_test[:ID] = full[26730:end, :ID]
 
-writetable("./clean_data/train.csv", Train)
-writetable("./clean_data/Xs_test.csv", Xs_test)
+#Now we separate cats and dogs, bomber berta
+cat_train = Train[Train[:AnimalType] .== "Cat", :]
+dog_train = Train[Train[:AnimalType] .== "Dog", :]
+cat_test = Xs_test[Xs_test[:AnimalType] .== "Cat", :]
+dog_test = Xs_test[Xs_test[:AnimalType] .== "Dog", :]
+
+
+writetable("./clean_data/cat_train.csv", cat_train)
+writetable("./clean_data/dog_train.csv", dog_train)
+
+writetable("./clean_data/cat_test.csv", cat_test)
+writetable("./clean_data/dog_test.csv", dog_test)
