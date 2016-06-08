@@ -27,7 +27,7 @@ xgb_test <- xgb.DMatrix(model.matrix(~AnimalType+AgeinDays+HasName+Hour+Weekday+
 
 
 # build model
-xgb_model <- xgboost(xgb_train, y_train, nrounds=20, objective='multi:softprob', num_class=5, eval_metric='mlogloss', early.stop.round=TRUE)
+xgb_model <- xgboost(xgb_train, y_train, nrounds=40, objective='multi:softprob', num_class=5, eval_metric='mlogloss', early.stop.round=TRUE)
 
 # make predictions
 predictions <- predict(xgb_model, xgb_test)
@@ -42,3 +42,8 @@ colnames(xgb_preds) <- c('Adoption', 'Died', 'Euthanasia', 'Return_to_owner', 'T
 xgb_preds['ID'] <- Xs_test['ID']
 
 write.csv(xgb_preds, './predictions/XGB.csv', row.names=FALSE)
+
+
+#visualize feature importance
+importance_matrix <- xgb.importance(factorVars, model = xgb_model)
+xgb.plot.importance(importance_matrix)
