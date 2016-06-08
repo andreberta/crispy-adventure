@@ -15,7 +15,7 @@ if (doing == "cat") {
 }
 
 #as attributes we have
-#attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Minute, :Weekday, :Day, :Month, :Year, :TimeofDay, :ColorComplexity, :BreedComplexity, :IsMix, :IsSlash :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
+#attributes = [:AnimalType, :AgeinDays, :HasName, :NameLength, :Hour, :Minute, :Weekday, :Day, :Month, :Year, :TimeofDay, :ColorComplexity, :BreedComplexity, :IsMix, :IsSlash :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
 
 
 factorVars <- c('HasName', 'TimeofDay', 'IsMix', 'IsSlash', 'SimpleBreed','SimpleColor','Intact','Sex','LifeStage', 'OutcomeType')
@@ -30,9 +30,9 @@ y_train <- as.numeric(as.factor(train$OutcomeType)) - 1
 labels_train <- data.frame(train$OutcomeType, y_train)
 
 # xgboost-specific design matrices
-xgb_train <- xgb.DMatrix(model.matrix(~AgeinDays+HasName+Hour+Minute+Weekday+Day+Month+Year+TimeofDay+ColorComplexity+BreedComplexity+IsMix+IsSlash+SimpleBreed+SimpleColor+Intact+Sex+LifeStage, data=train), label=y_train, missing=NA)
+xgb_train <- xgb.DMatrix(model.matrix(~AgeinDays+HasName+NameLength+Hour+Minute+Weekday+Day+Month+Year+TimeofDay+ColorComplexity+BreedComplexity+IsMix+IsSlash+SimpleBreed+SimpleColor+Intact+Sex+LifeStage, data=train), label=y_train, missing=NA)
 
-xgb_test  <- xgb.DMatrix(model.matrix(~AgeinDays+HasName+Hour+Minute+Weekday+Day+Month+Year+TimeofDay+ColorComplexity+BreedComplexity+IsMix+IsSlash+SimpleBreed+SimpleColor+Intact+Sex+LifeStage, data=Xs_test), missing=NA)
+xgb_test  <- xgb.DMatrix(model.matrix(~AgeinDays+HasName+NameLength+Minute+Weekday+Day+Month+Year+TimeofDay+ColorComplexity+BreedComplexity+IsMix+IsSlash+SimpleBreed+SimpleColor+Intact+Sex+LifeStage, data=Xs_test), missing=NA)
 
 
 # tune nrounds - uncomment first
@@ -60,5 +60,5 @@ write.csv(xgb_preds, out_file, row.names=FALSE)
 
 
 #visualize feature importance
-importance_matrix <- xgb.importance(c('AgeinDays', 'HasName', 'Hour', 'Minute', 'Weekday', 'Day', 'Month', 'Year', 'TimeofDay', 'ColorComplexity', 'BreedComplexity', 'IsMix', 'IsSlash', 'SimpleBreed', 'SimpleColor', 'Intact', 'Sex', 'LifeStage'), model = xgb_model)
+importance_matrix <- xgb.importance(c('AgeinDays', 'HasName', 'NameLength', 'Hour', 'Minute', 'Weekday', 'Day', 'Month', 'Year', 'TimeofDay', 'ColorComplexity', 'BreedComplexity', 'IsMix', 'IsSlash', 'SimpleBreed', 'SimpleColor', 'Intact', 'Sex', 'LifeStage'), model = xgb_model)
 xgb.plot.importance(importance_matrix)

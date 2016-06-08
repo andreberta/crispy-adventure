@@ -46,6 +46,9 @@ full[isna(full[:Name]), :Name] = "Nameless"
 full[:HasName] = 1
 full[full[:Name] .== "Nameless", :HasName] = 0
 
+# Name length, because who knows...
+full[:NameLength] = map(length, full[:Name])
+
 
 # Replace blank sex with "Unknown" (there is just one case in train, the original post replaces with the most common, both since we already haev some "Unknown" we better use them)
 full[isna(full[:SexuponOutcome]), :SexuponOutcome] = "Unknown"
@@ -119,7 +122,7 @@ full[full[:AgeinDays] .<= 365, :LifeStage] = "baby"
 #OK, now keep the relevant attributes and split between train and test
 #up to now we have:
 #AnimalID -> remove
-#Name -> keep, but probably I will never use it
+#Name -> remove
 #Datetime -> remove, we have split it                               KEEP IN MIND THAT THIS (AND DERIVED) IS LIKE CHEATING
 #OutcomeType -> this is the label to predict
 #OutcomeSubtype -> useless
@@ -131,6 +134,7 @@ full[full[:AgeinDays] .<= 365, :LifeStage] = "baby"
 #ID -> remove
 #AgeinDays -> keep
 #HasName -> keep
+#NameLength -> keep
 #Hour -> keep, but I am in doubt
 #Minute -> keep, but I am in doubt
 #Weekday -> keep, but I am in doubt
@@ -147,7 +151,7 @@ full[full[:AgeinDays] .<= 365, :LifeStage] = "baby"
 #Intact -> keep
 #Sex -> keep
 #Lifestage -> keep, but it is similar to AgeinDays
-attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Minute, :Weekday, :Day, :Month, :Year, :TimeofDay, :ColorComplexity, :BreedComplexity, :IsMix, :IsSlash, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
+attributes = [:AnimalType, :AgeinDays, :HasName, :NameLength, :Hour, :Minute, :Weekday, :Day, :Month, :Year, :TimeofDay, :ColorComplexity, :BreedComplexity, :IsMix, :IsSlash, :SimpleBreed, :SimpleColor, :Intact, :Sex, :LifeStage]
 Train = full[1:26729, attributes]
 Train[:OutcomeType] = full[1:26729, :OutcomeType]
 Xs_test = full[26730:end, attributes]
