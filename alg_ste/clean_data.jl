@@ -148,6 +148,7 @@ attributes = [:Name, :AnimalType, :AgeinDays, :HasName, :Hour, :Minute, :Weekday
 Train = full[1:26729, attributes]
 Train[:OutcomeType] = full[1:26729, :OutcomeType]
 Xs_test = full[26730:end, attributes]
+Xs_test[:ID] = full[26730:end, :ID]
 
 writetable("./clean_data/train.csv", Train)
 writetable("./clean_data/Xs_test.csv", Xs_test)

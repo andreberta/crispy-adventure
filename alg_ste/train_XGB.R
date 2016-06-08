@@ -21,16 +21,13 @@ xgb_test <- xgb.DMatrix(model.matrix(~AnimalType+AgeinDays+HasName+Hour+Weekday+
 
 
 # tune nrounds - uncomment first
-# xgb.cv(data=xgb_train, label=y_train, nfold=5, nround=200, objective='multi:softprob',
-#       num_class=5, eval_metric='mlogloss')
+#xgb.cv(data=xgb_train, label=y_train, nfold=5, nround=200, objective='multi:softprob', num_class=5, eval_metric='mlogloss')
 
-# looks like nrounds should be around 45
+# looks like nrounds should be around 45 (mah, per me gia a 20 è ok...)
 
 
 # build model
-xgb_model <- xgboost(xgb_train, y_train, nrounds=45, objective='multi:softprob',
-                 num_class=5, eval_metric='mlogloss',
-                 early.stop.round=TRUE)
+xgb_model <- xgboost(xgb_train, y_train, nrounds=20, objective='multi:softprob', num_class=5, eval_metric='mlogloss', early.stop.round=TRUE)
 
 # make predictions
 predictions <- predict(xgb_model, xgb_test)
@@ -42,7 +39,6 @@ xgb_preds <- data.frame(t(matrix(predictions, nrow=5, ncol=length(predictions)/5
 colnames(xgb_preds) <- c('Adoption', 'Died', 'Euthanasia', 'Return_to_owner', 'Transfer')
 
 # attach ID column
-xgb_preds['ID'] <- test['ID']
+xgb_preds['ID'] <- Xs_test['ID']
 
-# quick peek - looks good
-head(xgb_preds)
+write.csv(xgb_preds, './predictions/XGB.csv', row.names=FALSE)
